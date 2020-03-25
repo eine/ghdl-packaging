@@ -1,0 +1,63 @@
+name: 'mingw-git'
+
+on:
+  push:
+    paths:
+      - '.github/workflows/mingw-git.yml'
+      - 'msys2-mingw/run.sh'
+      - 'msys2-mingw/mcode-git/*'
+      - 'msys2-mingw/llvm-git/*'
+  schedule:
+    - cron: '0 0 * * 2,5'
+
+env:
+  CI: true
+
+jobs:
+
+  win:
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        include: [
+          {installs: "MINGW32", pkg: "mcode-git"},
+          #{installs: "MINGW32", pkg: "llvm-git"},  ! Not yet functional
+          #{installs: "MINGW64", pkg: "mcode-git"}, ! mcode it not yet supported on win64
+          {installs: "MINGW64", pkg: "llvm-git"},
+        ]
+    defaults:
+      run:
+        shell: msys2 {0}
+    env:
+      MINGW_INSTALLS: ${{ matrix.installs }}
+      TARGET: ${{ matrix.pkg }}
+    steps:
+
+    - uses: msys2/setup-msys2@v2
+      with:
+        msystem: ${{ matrix.installs }}
+        update: true
+        install: base-devel git
+
+    - run: git config --global core.autocrlf input
+      shell: bash
+
+    - uses: actions/checkout@v2
+
+    - name: Build package
+      run: ./msys2-mingw/run.sh -b
+
+    - name: Install package
+      run: pacman --noconfirm -U msys2-mingw/${{ matrix.pkg }}/mingw-*ghdl*.pkg.tar.zst
+
+    - name: Test package
+      run: ./msys2-mingw/run.sh -t
+
+    - uses: actions/upload-artifact@v2
+      with:
+        name: ${{ matrix.pkg }}
+        path: |
+          msys2-mingw/${{ matrix.pkg }}/mingw-*ghdl*.pkg.tar.zst
+          msys2-mingw/${{ matrix.pkg }}/PKGBUILD

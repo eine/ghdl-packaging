@@ -1,0 +1,60 @@
+_realname=ghdl-mcode-git
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=git
+pkgrel=1
+pkgdesc="GHDL: the open-source analyzer, compiler, simulator and (experimental) synthesizer for VHDL (mcode backend) (mingw-w64)"
+arch=('any')
+license=(['GPLv2+', 'custom'])
+url="http://ghdl.free.fr/"
+provides=("${MINGW_PACKAGE_PREFIX}-ghdl")
+conflicts=(
+  "${MINGW_PACKAGE_PREFIX}-ghdl-mcode"
+  "${MINGW_PACKAGE_PREFIX}-ghdl-llvm"
+  "${MINGW_PACKAGE_PREFIX}-ghdl-mcode-rc"
+  "${MINGW_PACKAGE_PREFIX}-ghdl-llvm-rc"
+  "${MINGW_PACKAGE_PREFIX}-ghdl-llvm-git"
+)
+depends=('zlib-devel')
+makedepends=("${MINGW_PACKAGE_PREFIX}-gcc" "${MINGW_PACKAGE_PREFIX}-gcc-ada")
+source=(
+  "ghdl::git://github.com/ghdl/ghdl.git"
+)
+sha512sums=(
+  'SKIP'
+)
+
+pkgver() {
+  cd "${srcdir}/ghdl"
+  # Date of the last git commit
+  _verdate=`git log -1 --date=short --pretty=format:%cd`
+  if `git describe --exact-match > /dev/null 2>&1` ; then
+    echo "`git describe --tags`.$_verdate" | sed 's/-//g'
+  else
+    git describe --tags --abbrev=10 | sed "s/\([!-]*\)-\(.*\)/\1.$_verdate.\2/g" | sed 's/-//g'
+  fi;
+}
+
+# FIXME: Cannot run tests because expected failures make 'check()' exit with error: A failure occurred in check()
+# Here, the testsuite is copied to be executed afterwards
+prepare() {
+  cp -r "${srcdir}/ghdl/testsuite" "${startdir}/"
+  rm -rf "${startdir}"/testsuite/gna/issue1326/
+}
+
+build() {
+  mkdir "${srcdir}/builddir"
+  cd "${srcdir}/builddir"
+  ../ghdl/configure \
+    --prefix=${MINGW_PREFIX} \
+    LDFLAGS=-static \
+    --enable-libghdl \
+    --enable-synth
+  make GNATMAKE="gnatmake -j$(nproc)"
+}
+
+package() {
+  cd "${srcdir}/builddir"
+  mkdir -p "${pkgdir}${MINGW_PREFIX}/lib"
+  make DESTDIR="${pkgdir}" install
+}
