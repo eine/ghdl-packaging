@@ -132,7 +132,7 @@ package_ghdl-llvm-git() {
   depends+=('llvm-libs')
   options=(!emptydirs)
 
-  cd $pkgname
+  cd ${pkgname%-git}
 
   make DESTDIR="$pkgdir" install
 
@@ -161,7 +161,7 @@ package_ghdl-gcc-git() {
   # strip binaries
   find "$pkgdir"/usr/bin/ "$pkgdir"/usr/lib/gcc -type f -and \( -executable -o -name '*.o' \) -exec strip '{}' \;
 
-  cd "$srcdir"/ghdl-gcc
+  cd "$srcdir"/${pkgname%-git}
 
   make DESTDIR="$pkgdir" install
 }

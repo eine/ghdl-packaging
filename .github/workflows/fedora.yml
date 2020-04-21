@@ -6,6 +6,11 @@ on:
       - '.github/workflows/fedora.yml'
       - 'fedora/master.sh'
       - 'fedora/master/*'
+  pull_request:
+    paths:
+      - '.github/workflows/fedora.yml'
+      - 'fedora/master.sh'
+      - 'fedora/master/*'
   schedule:
     - cron: '0 0 * * 2,5'
 

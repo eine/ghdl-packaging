@@ -7,6 +7,12 @@ on:
       - 'msys2-mingw/run.sh'
       - 'msys2-mingw/mcode-git/*'
       - 'msys2-mingw/llvm-git/*'
+  pull_request:
+    paths:
+      - '.github/workflows/mingw-git.yml'
+      - 'msys2-mingw/run.sh'
+      - 'msys2-mingw/mcode-git/*'
+      - 'msys2-mingw/llvm-git/*'
   schedule:
     - cron: '0 0 * * 2,5'
 

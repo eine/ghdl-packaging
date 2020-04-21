@@ -8,6 +8,13 @@ on:
       - 'archlinux/mcode/*'
       - 'archlinux/llvm/*'
       - 'archlinux/gcc/*'
+  pull_request:
+    paths:
+      - '.github/workflows/archlinux.yml'
+      - 'archlinux/run.sh'
+      - 'archlinux/mcode/*'
+      - 'archlinux/llvm/*'
+      - 'archlinux/gcc/*'
   schedule:
     - cron: '0 0 * * 2,5'
 
