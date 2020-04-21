@@ -5,6 +5,7 @@ on:
     paths:
       - '.github/workflows/archlinux.yml'
       - 'archlinux/run.sh'
+      - 'archlinux/community/*'
       - 'archlinux/mcode/*'
       - 'archlinux/llvm/*'
       - 'archlinux/gcc/*'
@@ -21,9 +22,10 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
-      max-parallel: 1
+      max-parallel: 2
       matrix:
         pkg: [
+          'community',
           'mcode',
           'llvm',
           'gcc'
@@ -32,9 +34,7 @@ jobs:
 
     - uses: actions/checkout@v1
 
-    - run: ./archlinux/run.sh
-      env:
-        TARGET: ${{ matrix.pkg }}
+    - run: TARGET=${{ matrix.pkg }} ./archlinux/run.sh
 
     - name: Upload package
       uses: actions/upload-artifact@master
