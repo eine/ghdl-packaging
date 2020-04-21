@@ -17,29 +17,20 @@ env:
 jobs:
 
   build:
-    strategy:
-      fail-fast: false
-      max-parallel: 1
-      matrix:
-        pkg: [
-          'mcode-git',
-          'llvm-git',
-          'gcc-git'
-        ]
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v1
     - run: |
         ./archlinux/run.sh
       env:
-        TARGET: ${{ matrix.pkg }}
+        TARGET: ghdl-git
     - name: Upload package
       uses: actions/upload-artifact@master
       with:
         name: package
-        path: archlinux/${{ matrix.pkg }}/tarball
+        path: archlinux/ghdl-git/tarball
     - name: Upload sources
       uses: actions/upload-artifact@master
       with:
         name: sources
-        path: archlinux/${{ matrix.pkg }}/srcs
+        path: archlinux/ghdl-git/srcs

@@ -82,7 +82,7 @@ do_build () {
   gend
 
   gstart 'Build package'
-    sudo -u nobody makepkg -sCLfc --noconfirm
+    sudo -u nobody makepkg -sCLfc --skippgpcheck --noconfirm
   gend
 
   gstart 'List artifacts'
@@ -93,21 +93,31 @@ do_build () {
   mkdir -p "/src/$TARGET/tarball" "/src/$TARGET/srcs"
   cp -v ghdl*.pkg.tar.xz "/src/$TARGET/tarball/"
   cp -v PKGBUILD .gitignore "/src/$TARGET/srcs/"
-  cp -vr testsuite "/src/$TARGET/"
   gend
 }
 
 #---
 
 do_test () {
-  gstart 'Install'
-    pacman  -Syu --noconfirm --noprogressbar --needed diffutils grep
-    pacman --noconfirm -U tarball/ghdl*.pkg.tar.xz
+  gstart 'Install help packages'
+    pacman  -Syu --noconfirm --noprogressbar --needed diffutils grep git
   gend
 
-  cd testsuite
-  GHDL=ghdl ./testsuite.sh
-  cd ..
+  gstart 'Clone GHDL'
+    git clone --depth=1 https://github.com/ghdl/ghdl
+    cd ghdl/testsuite
+  gend
+
+  for PKG in ../../tarball/ghdl*.pkg.tar.xz; do
+    gstart "Install $PKG"
+      pacman  -U --noconfirm --noprogressbar --needed $PKG
+    gend
+    gstart "Test $PKG"
+      GHDL=ghdl ./testsuite.sh
+    gend
+  done
+
+  cd ../..
 }
 
 #---

@@ -1,0 +1,167 @@
+# Maintainer: Filipe Laíns (FFY00) <lains@archlinux.org>
+
+_pkgbase=ghdl
+pkgbase=$_pkgbase-git
+pkgname=('ghdl-mcode-git' 'ghdl-llvm-git' 'ghdl-gcc-git')
+_gcc=9.3.0
+_isl=0.22
+pkgver=dummy
+pkgrel=1
+pkgdesc='VHDL simulator'
+arch=('x86_64')
+url='https://github.com/ghdl/ghdl'
+license=('GPL2')
+depends=('gcc-ada')
+makedepends=('git' 'gmp' 'mpfr' 'libmpc' 'zlib' 'llvm' 'clang')
+provides=('ghdl')
+conflicts=('ghdl')
+validpgpkeys=('33C235A34C46AA3FFB293709A328C3A2C3C45C06') # Jakub Jelinek <jakub@redhat.com>
+source=("git+$url.git"
+        "https://ftp.gnu.org/gnu/gcc/gcc-$_gcc/gcc-$_gcc.tar.xz"{,.sig}
+        "http://isl.gforge.inria.fr/isl-$_isl.tar.bz2")
+sha512sums=('SKIP'
+            '4b9e3639eef6e623747a22c37a904b4750c93b6da77cf3958d5047e9b5ebddb7eebe091cc16ca0a227c0ecbd2bf3b984b221130f269a97ee4cc18f9cf6c444de'
+            'SKIP'
+            'fc2c9796979610dd51143dcefe4f5c989c4354571cc5a1fcc6b932fd41f42a54f6b43adfd289af61be7bd06f3a523fa6a7d7ee56680e32d8036beb4c188fa668')
+
+export GNATMAKE="gnatmake $MAKEFLAGS"
+
+pkgver() {
+  cd $_pkgbase
+
+  printf "%s.r%s.%s" \
+        $(git tag | tail -n1 | sed 's|v||') \
+        $(git rev-list --count HEAD) \
+        $(git rev-parse --short HEAD)
+}
+
+prepare() {
+  cd "$srcdir"
+
+  cp -r $_pkgbase ghdl-mcode
+  cp -r $_pkgbase ghdl-llvm
+  cp -r $_pkgbase ghdl-gcc
+
+  mkdir gcc-build
+
+  cd gcc-$_gcc
+
+  ln -s ../isl-$_isl isl
+
+  echo $_gcc > gcc/BASE-VER
+
+  # hack! - some configure tests for header files using "$CPP $CPPFLAGS"
+  sed -i "/ac_cpp=/s/\$CPPFLAGS/\$CPPFLAGS -O2/" {libiberty,gcc}/configure
+}
+
+_configure() {
+  ./configure \
+      --prefix=/usr \
+      --disable-werror \
+      --enable-checks \
+      --enable-libghdl \
+      --enable-openieee \
+      --enable-synth $@
+}
+
+build() {
+  echo 'Building ghdl-mcode...'
+  cd "$srcdir"/ghdl-mcode
+
+  _configure
+
+  make
+
+  echo 'Building ghdl-llvm...'
+  cd "$srcdir"/ghdl-llvm
+
+  _configure --with-llvm-config
+
+  make
+
+  echo 'Building ghdl-gcc...'
+  cd "$srcdir"/ghdl-gcc
+
+  _configure --with-gcc="$srcdir"/gcc-$_gcc
+
+  make copy-sources
+
+  cd "$srcdir"/gcc-build
+
+  "$srcdir"/gcc-$_gcc/configure \
+      --prefix=/usr \
+      --libdir=/usr/lib \
+      --libexecdir=/usr/lib \
+      --enable-languages=vhdl \
+      --enable-default-pie \
+      --enable-default-ssp \
+      --with-isl \
+      --enable-plugin \
+      --enable-lto \
+      --disable-bootstrap \
+      --disable-multilib \
+      --disable-libada \
+      --disable-libsanitizer \
+      --disable-libssp \
+      --disable-libquadmath \
+      --disable-libgomp \
+      --disable-libvtv \
+      --with-pkgversion='Arch Linux Repositories' \
+      --with-bugurl='https://bugs.archlinux.org/'
+
+  make
+
+  cd "$srcdir"/ghdl-gcc
+
+  make \
+      GHDL_GCC_BIN="$srcdir"/gcc-build/gcc/ghdl \
+      GHDL1_GCC_BIN="--GHDL1=$srcdir/gcc-build/gcc/ghdl1" \
+      ghdllib
+}
+
+package_ghdl-mcode-git() {
+  pkgdesc="$pkgdesc (mcode backend)"
+
+  cd ${pkgname%-git}
+
+  make DESTDIR="$pkgdir" install
+}
+
+package_ghdl-llvm-git() {
+  pkgdesc="$pkgdesc (LLVM backend)"
+  depends+=('llvm-libs')
+  options=(!emptydirs)
+
+  cd $pkgname
+
+  make DESTDIR="$pkgdir" install
+
+  # strip binaries
+  find "$pkgdir"/usr/bin/ -type f -and \( -executable -o -name '*.o' \) -exec strip '{}' \;
+}
+
+package_ghdl-gcc-git() {
+  pkgdesc="$pkgdesc (GCC backend)"
+  options=(!emptydirs)
+
+  cd "$srcdir"/gcc-build
+
+  make DESTDIR="$pkgdir" install
+
+  # Remove files that conflict with the system gcc -- we only want to install the ghdl plugin
+  for FILE in $(find "$pkgdir" -not -type d); do
+    if [ -f /"${FILE#"$pkgdir"}" ]; then
+      rm -f "$FILE"
+    fi
+  done
+
+  find "$pkgdir"/usr/share -not -type d -not -name '*ghdl*' -delete
+  rm -rf "$pkgdir"/usr/lib64
+
+  # strip binaries
+  find "$pkgdir"/usr/bin/ "$pkgdir"/usr/lib/gcc -type f -and \( -executable -o -name '*.o' \) -exec strip '{}' \;
+
+  cd "$srcdir"/ghdl-gcc
+
+  make DESTDIR="$pkgdir" install
+}
