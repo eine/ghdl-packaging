@@ -66,8 +66,7 @@ do_build () {
   gend
 
   gstart 'Install devel deps'
-    pacman --noconfirm -Sy
-    pacman --noconfirm -S grep base-devel
+    pacman -Syu --noconfirm --noprogressbar --needed grep base-devel
   gend
 
   gstart 'Set permissions for nobody'
@@ -102,9 +101,8 @@ do_build () {
 
 do_test () {
   gstart 'Install'
-    pacman --noconfirm -Sy
-    pacman --noconfirm -S diffutils grep
-    pacman --noconfirm -U $(ls tarball/ghdl*.pkg.tar.xz)
+    pacman  -Syu --noconfirm --noprogressbar --needed diffutils grep
+    pacman --noconfirm -U tarball/ghdl*.pkg.tar.xz
   gend
 
   cd testsuite
