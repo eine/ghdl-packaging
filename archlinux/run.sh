@@ -126,7 +126,7 @@ case "$1" in
       -e BASE_COL="$ANSI_BLUE" \
       -e TARGET \
       -v /"$archdir"://src -w //src/ \
-      archlinux/base ./run.sh build
+      archlinux ./run.sh build
 
     gstart 'PKGBUILD diff'
       git diff "${archdir}/${TARGET}/PKGBUILD"
@@ -135,7 +135,7 @@ case "$1" in
     printf "${ANSI_MAGENTA}Run 'test' in a container\n$ANSI_NOCOLOR"
     docker run --rm -e CI \
       -v /"$archdir"://src -w "//src/$TARGET" \
-      archlinux/base ../run.sh test
+      archlinux ../run.sh test
 
     sudo chown -R $USER:$USER "${archdir}/${TARGET}"
   ;;
