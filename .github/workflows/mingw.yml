@@ -7,6 +7,7 @@ on:
       - 'msys2-mingw/run.sh'
       - 'msys2-mingw/mcode/*'
       - 'msys2-mingw/llvm/*'
+  pull_request:
   schedule:
     - cron: '0 0 * * 2,5'
 

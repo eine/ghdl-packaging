@@ -8,6 +8,7 @@ on:
       - 'archlinux/mcode-git/*'
       - 'archlinux/llvm-git/*'
       - 'archlinux/gcc-git/*'
+  pull_request:
   schedule:
     - cron: '0 0 * * 2,5'
 
