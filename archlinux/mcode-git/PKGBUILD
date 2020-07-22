@@ -1,10 +1,11 @@
 pkgname=ghdl-mcode-git
-pkgver=0.37dev.git20190907
+pkgver=git
 pkgrel=1
 arch=('i686' 'x86_64')
-pkgdesc='open-source analyzer, compiler and simulator for VHDL (mcode backend)'
-url='https://github.com/ghdl/ghdl'
-license=(['GPLv2', 'custom'])
+pkgdesc='GHDL: the open-source analyzer, compiler, simulator and (experimental) synthesizer for VHDL (mcode backend)'
+url="http://ghdl.free.fr/"
+repo="https://github.com/ghdl/ghdl"
+license=(['GPLv2+', 'custom'])
 
 provides=('ghdl')
 conflicts=('ghdl' 'ghdl-llvm-git' 'ghdl-gcc-git' 'ghdl-mcode' 'ghdl-llvm' 'ghdl-gcc')
@@ -31,12 +32,16 @@ pkgver() {
 
 prepare() {
 	cp -vr "${srcdir}/ghdl/testsuite" "${startdir}/"
+	rm -rf "${startdir}"/testsuite/gna/issue1326/
 }
 
 build() {
 	mkdir "${srcdir}/builddir"
 	cd "${srcdir}/builddir"
-	../ghdl/configure --prefix=/usr/ --enable-libghdl --enable-synth
+	../ghdl/configure \
+		--prefix=/usr/ \
+		--enable-libghdl \
+		--enable-synth
 	make GNATMAKE="gnatmake -j$(nproc)"
 }
 

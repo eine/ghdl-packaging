@@ -1,15 +1,16 @@
 pkgname=ghdl-llvm-git
-pkgver=0.37dev.git20190907
+pkgver=git
 pkgrel=1
 arch=('any')
-pkgdesc='open-source analyzer, compiler and simulator for VHDL (LLVM backend)'
-url='https://github.com/ghdl/ghdl'
-license=(['GPLv2', 'custom'])
+pkgdesc='GHDL: the open-source analyzer, compiler, simulator and (experimental) synthesizer for VHDL (LLVM backend)'
+url="http://ghdl.free.fr/"
+repo="https://github.com/ghdl/ghdl"
+license=(['GPLv2+', 'custom'])
 
 provides=('ghdl')
 conflicts=('ghdl' 'ghdl-mcode-git' 'ghdl-gcc-git' 'ghdl-mcode' 'ghdl-llvm' 'ghdl-gcc')
-makedepends=('gcc-ada' 'git' 'llvm<9' 'clang<9')
-depends=('gcc' 'llvm-libs<9')
+makedepends=('gcc-ada' 'git' 'llvm' 'clang')
+depends=('gcc' 'llvm-libs')
 
 source=(
 	"ghdl::git://github.com/ghdl/ghdl.git"
@@ -31,6 +32,7 @@ pkgver() {
 
 prepare() {
 	cp -vr "${srcdir}/ghdl/testsuite" "${startdir}/"
+	rm -rf "${startdir}"/testsuite/gna/issue1326/
 }
 
 build() {
