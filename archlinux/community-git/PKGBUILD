@@ -7,16 +7,17 @@ _gcc=9.3.0
 _isl=0.22
 pkgver=dummy
 pkgrel=1
-pkgdesc='VHDL simulator'
+pkgdesc='GHDL: the open-source analyzer, compiler, simulator and (experimental) synthesizer for VHDL'
 arch=('x86_64')
-url='https://github.com/ghdl/ghdl'
-license=('GPL2')
+license=(['GPLv2+', 'custom'])
+url="http://ghdl.free.fr/"
+repo="https://github.com/ghdl/ghdl"
 depends=('gcc-ada')
 makedepends=('git' 'gmp' 'mpfr' 'libmpc' 'zlib' 'llvm' 'clang')
 provides=('ghdl')
 conflicts=('ghdl')
 validpgpkeys=('33C235A34C46AA3FFB293709A328C3A2C3C45C06') # Jakub Jelinek <jakub@redhat.com>
-source=("git+$url.git"
+source=("git+$repo.git"
         "https://ftp.gnu.org/gnu/gcc/gcc-$_gcc/gcc-$_gcc.tar.xz"{,.sig}
         "http://isl.gforge.inria.fr/isl-$_isl.tar.bz2")
 sha512sums=('SKIP'
