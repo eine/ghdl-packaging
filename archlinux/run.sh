@@ -100,16 +100,11 @@ do_build () {
 do_test () {
   gblock 'Install help packages' pacman -Syu --noconfirm --noprogressbar --needed diffutils grep git
 
-  gstart 'Clone GHDL'
-    git clone --depth=1 https://github.com/ghdl/ghdl
-    cd ghdl/testsuite
-  gend
-
-  for PKG in ../../artifacts/ghdl*.pkg.tar.*; do
+  for PKG in artifacts/ghdl*.pkg.tar.*; do
     gstart "Install $PKG"
       pacman -U --noconfirm --noprogressbar --needed $PKG
     gend
-    GHDL=ghdl ./testsuite.sh
+    GHDL=ghdl ./testsuite/testsuite.sh
   done
 
   cd ../..

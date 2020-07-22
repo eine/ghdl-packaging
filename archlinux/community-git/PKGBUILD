@@ -39,6 +39,9 @@ pkgver() {
 prepare() {
   cd "$srcdir"
 
+  cp -r ghdl/testsuite "${startdir}/"
+  rm -rf "${startdir}"/testsuite/gna/issue1326/
+
   cp -r $_pkgbase ghdl-mcode
   cp -r $_pkgbase ghdl-llvm
   cp -r $_pkgbase ghdl-gcc
