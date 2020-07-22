@@ -36,6 +36,12 @@ gstart () {
 gend () {
   :
 }
+gblock () {
+  gstart "$1"
+    shift
+    $@
+  gend
+}
 
 [ -n "$CI" ] && {
   echo "INFO: set 'gstart' and 'gend' for CI"
@@ -65,9 +71,7 @@ do_build () {
     cd /wrk
   gend
 
-  gstart 'Install devel deps'
-    pacman -Syu --noconfirm --noprogressbar --needed grep base-devel
-  gend
+  gblock 'Install devel deps' pacman -Syu --noconfirm --noprogressbar --needed grep base-devel
 
   gstart 'Set permissions for nobody'
     chage -E -1 nobody
@@ -81,13 +85,8 @@ do_build () {
     echo 'ALL ALL=(ALL) NOPASSWD: /usr/sbin/pacman' >> /etc/sudoers
   gend
 
-  gstart 'Build package'
-    sudo -u nobody makepkg -sCLfc --skippgpcheck --noconfirm
-  gend
-
-  gstart 'List artifacts'
-  ls -la
-  gend
+  gblock 'Build package' sudo -u nobody makepkg -sCLfc --skippgpcheck --noconfirm
+  gblock 'List artifacts' ls -la
 
   gstart 'Copy artifacts'
     mkdir -p "/src/$TARGET/artifacts"
@@ -99,9 +98,7 @@ do_build () {
 #---
 
 do_test () {
-  gstart 'Install help packages'
-    pacman  -Syu --noconfirm --noprogressbar --needed diffutils grep git
-  gend
+  gblock 'Install help packages' pacman -Syu --noconfirm --noprogressbar --needed diffutils grep git
 
   gstart 'Clone GHDL'
     git clone --depth=1 https://github.com/ghdl/ghdl
@@ -112,9 +109,7 @@ do_test () {
     gstart "Install $PKG"
       pacman -U --noconfirm --noprogressbar --needed $PKG
     gend
-    gstart "Test $PKG"
-      GHDL=ghdl ./testsuite.sh
-    gend
+    GHDL=ghdl ./testsuite.sh
   done
 
   cd ../..
@@ -139,9 +134,7 @@ case "$1" in
       -v /"$archdir"://src -w //src/ \
       archlinux ./run.sh build
 
-    gstart 'PKGBUILD diff'
-      git diff "${archdir}/${TARGET}/PKGBUILD"
-    gend
+    gblock 'PKGBUILD diff' git diff "${archdir}/${TARGET}/PKGBUILD"
 
     printf "${ANSI_MAGENTA}Run 'test' in a container\n$ANSI_NOCOLOR"
     docker run --rm -e CI \
