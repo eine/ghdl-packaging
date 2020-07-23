@@ -30,11 +30,6 @@ pkgver() {
 	fi;
 }
 
-prepare() {
-	cp -vr "${srcdir}/ghdl/testsuite" "${startdir}/"
-	rm -rf "${startdir}"/testsuite/gna/issue1326/
-}
-
 build() {
 	mkdir "${srcdir}/builddir"
 	cd "${srcdir}/builddir"
@@ -43,6 +38,12 @@ build() {
 		--enable-libghdl \
 		--enable-synth
 	make GNATMAKE="gnatmake -j$(nproc)"
+}
+
+check() {
+  cd "${srcdir}/builddir"
+  make install.vpi.local
+  make test
 }
 
 package() {

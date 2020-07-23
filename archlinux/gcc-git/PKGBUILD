@@ -49,9 +49,6 @@ prepare() {
 
 	cd "${srcdir}/ghdl"
 
-	cp -vr testsuite "${startdir}/"
-	rm -rf "${startdir}"/testsuite/gna/issue1326/
-
 	# Note : Add --enable-openieee to use free (but not complete) implementation of IEEE VHDL libs
 	./configure \
 		--prefix=/usr \
@@ -138,6 +135,12 @@ build() {
 		GHDL_GCC_BIN="${srcdir}/gcc-build/gcc/ghdl" \
 		GHDL1_GCC_BIN="--GHDL1=${srcdir}/gcc-build/gcc/ghdl1" \
 		ghdllib
+}
+
+check() {
+  cd "${srcdir}/gcc-build"
+  make install.vpi.local
+  make test
 }
 
 package() {

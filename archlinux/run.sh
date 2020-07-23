@@ -91,7 +91,10 @@ do_build () {
   gstart 'Copy artifacts'
     mkdir -p "/src/$TARGET/artifacts"
     cp ghdl*.pkg.tar.* PKGBUILD .gitignore "/src/$TARGET/artifacts/"
-    cp -r testsuite "/src/$TARGET/"
+    if [ -d testsuite ]; then
+      echo "Copying testsuite..."
+      cp -r testsuite "/src/$TARGET/"
+    fi
   gend
 }
 
@@ -127,10 +130,12 @@ case "$1" in
 
     gblock 'PKGBUILD diff' git diff "${archdir}/${TARGET}/PKGBUILD"
 
-    printf "${ANSI_MAGENTA}Run 'test' in a container\n$ANSI_NOCOLOR"
-    docker run --rm -e CI \
-      -v /"$archdir"://src -w "//src/$TARGET" \
-      ghdl/build:archlinux ../run.sh test
+    if [ -d "${archdir}/${TARGET}"/testsuite ]; then
+      printf "${ANSI_MAGENTA}Run 'test' in a container\n$ANSI_NOCOLOR"
+      docker run --rm -e CI \
+        -v /"$archdir"://src -w "//src/$TARGET" \
+        ghdl/build:archlinux ../run.sh test
+    fi
 
     sudo chown -R $USER:$USER "${archdir}/${TARGET}"
   ;;
