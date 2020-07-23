@@ -1,10 +1,11 @@
 pkgname=ghdl-gcc
-pkgver=v0.36
+pkgver=v0.37
 pkgrel=1
 arch=('any')
-pkgdesc='open-source analyzer, compiler and simulator for VHDL (GCC backend)'
-url='https://github.com/ghdl/ghdl'
-license=(['GPLv2', 'custom'])
+pkgdesc='GHDL: the open-source analyzer, compiler, simulator and (experimental) synthesizer for VHDL (GCC backend)'
+url="http://ghdl.free.fr/"
+repo="https://github.com/ghdl/ghdl"
+license=(['GPLv2+', 'custom'])
 
 provides=('ghdl')
 conflicts=('ghdl' 'ghdl-mcode-git' 'ghdl-llvm-git' 'ghdl-gcc-git' 'ghdl-mcode' 'ghdl-llvm')
@@ -13,18 +14,18 @@ depends=('gcc')
 install=ghdl.install
 options=(!emptydirs staticlibs)
 
-_gccver=8.3.0
-_islver=0.20
+_gccver=9.3.0
+_islver=0.22.1
 
 source=(
 	"ghdl::git://github.com/ghdl/ghdl.git#tag=${pkgver}"
 	"ftp://ftp.gnu.org/gnu/gcc/gcc-${_gccver}/gcc-${_gccver}.tar.xz"
 	"http://isl.gforge.inria.fr/isl-${_islver}.tar.bz2"
 )
-md5sums=(
+sha256sums=(
 	'SKIP'
-	'65b210b4bfe7e060051f799e0f994896'
-	'cb396f31b24aeeac49840b519741b0e1'
+	'71e197867611f6054aa1119b13a0c0abac12834765fe2d81f35ac57f84f742d1'
+	'1a668ef92eb181a7c021e8531a3ca89fd71aa1b3744db56f68365ab0a224c5cd'
 )
 
 prepare() {
@@ -35,9 +36,14 @@ prepare() {
 
 	cd "${srcdir}/ghdl"
 
+	cp -vr testsuite "${startdir}/"
+
+	# Note : Add --enable-openieee to use free (but not complete) implementation of IEEE VHDL libs
 	./configure \
 		--prefix=/usr \
-		--with-gcc="${srcdir}/gcc"
+		--with-gcc="${srcdir}/gcc" \
+		--enable-libghdl \
+		--enable-synth
 
 	make copy-sources
 
@@ -49,9 +55,10 @@ prepare() {
 	# Do not run fixincludes - FIXME Why?
 	sed -i 's@\./fixinc\.sh@-c true@' gcc/Makefile.in
 
-	# Arch Linux installs libraries in /lib
 	# FIXME How to fix this for all architectures ?
+	# Arch Linux installs libraries in /lib
 	sed -i '/m64=/s/lib64/lib/' gcc/config/i386/t-linux64
+	# Arch Linux ARM installs aarch64 libraries /lib
 	sed -i '/lp64=/s/lib64/lib/' gcc/config/aarch64/t-aarch64-linux
 
 	# hack! - some configure tests for header files using "$CPP $CPPFLAGS"
@@ -134,6 +141,7 @@ package() {
 
 	# Remove gcc-specific files, keep only what is related to ghdl
 	cd "${pkgdir}"
+	rm -rf "usr/include/libiberty"
 	rm -rf "usr/share/"{locale,man}
 	find "usr/lib" \
 		-maxdepth 1 -mindepth 1 \
@@ -147,4 +155,10 @@ package() {
 	find "usr/bin" "usr/share/info" \
 		-maxdepth 1 -mindepth 1 -not -name 'ghdl*' \
 		-exec rm -rf {} +
+
+	# In case it does not exist, create symlink libghdl.so
+	local _gso=`ls "${pkgdir}/usr/lib/" | grep -e '^libghdl-.*\.so$' | head -n 1`
+	if [[ -n "$_gso" ]] ; then
+		ln -s "$_gso" "${pkgdir}/usr/lib/libghdl.so"
+	fi
 }
