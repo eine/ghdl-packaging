@@ -120,7 +120,7 @@ build() {
 
 	# Build VHDL libraries and runtime,
 	# with some tweaks to enable running GHDL without installing it
-	make -j1 \
+	make \
 		GHDL_GCC_BIN="${srcdir}/gcc-build/gcc/ghdl" \
 		GHDL1_GCC_BIN="--GHDL1=${srcdir}/gcc-build/gcc/ghdl1" \
 		ghdllib
@@ -147,7 +147,6 @@ package() {
 		-maxdepth 1 -mindepth 1 \
 		-not -name 'gcc' \
 		-not -name '*ghdl*' \
-		-not -name 'libiberty*' \
 		-exec rm -rf {} +
 	find "usr/lib/gcc/${_machine}/${_version}" \
 		-maxdepth 1 -mindepth 1 -not -name 'ghdl*' \
