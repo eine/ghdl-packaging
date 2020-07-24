@@ -98,16 +98,12 @@ do_build () {
 #---
 
 do_test () {
-  gblock 'Install help packages' pacman -Syu --noconfirm --noprogressbar --needed diffutils grep git
-
   for PKG in artifacts/ghdl*.pkg.tar.*; do
     gstart "Install $PKG"
       pacman -U --noconfirm --noprogressbar --needed $PKG
     gend
     GHDL=ghdl ./testsuite/testsuite.sh
   done
-
-  cd ../..
 }
 
 #---
@@ -127,14 +123,14 @@ case "$1" in
       -e BASE_COL="$ANSI_BLUE" \
       -e TARGET \
       -v /"$archdir"://src -w //src/ \
-      archlinux ./run.sh build
+      ghdl/build:archlinux ./run.sh build
 
     gblock 'PKGBUILD diff' git diff "${archdir}/${TARGET}/PKGBUILD"
 
     printf "${ANSI_MAGENTA}Run 'test' in a container\n$ANSI_NOCOLOR"
     docker run --rm -e CI \
       -v /"$archdir"://src -w "//src/$TARGET" \
-      archlinux ../run.sh test
+      ghdl/build:archlinux ../run.sh test
 
     sudo chown -R $USER:$USER "${archdir}/${TARGET}"
   ;;
