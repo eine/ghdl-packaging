@@ -60,33 +60,41 @@ gblock () {
 
 #---
 
-do_build () {
-  gblock 'Install common build dependencies' pacman -S --noconfirm --needed base-devel git
+cd $(dirname $0)
 
-  # The command 'git describe' (used for version) needs the history. Get it.
-  # But the following command fails if the repository is complete.
-  gblock "Fetch --unshallow" git fetch --unshallow || true
+if [ -z "$TARGET" ]; then
+  printf "${ANSI_RED}Undefined TARGET!$ANSI_NOCOLOR"
+  exit 1
+fi
+cd "$TARGET"
 
-  case "$MINGW_INSTALLS" in
-    *32)
-      TARBALL_ARCH="i686"
-    ;;
-    *64)
-      TARBALL_ARCH="x86_64"
-    ;;
-    *)
-      printf "${ANSI_RED}Unknown MING_INSTALLS=${MINGW_INSTALLS}!$ANSI_NOCOLOR"
-      exit 1
-  esac
+gblock 'Install common build dependencies' pacman -S --noconfirm --needed base-devel git
 
-  gblock 'Install toolchain' pacman -S --noconfirm mingw-w64-${TARBALL_ARCH}-toolchain
-  gblock 'Build package' makepkg-mingw -sCLfc --noconfirm --noprogressbar
-  gblock 'List artifacts' ls -la
-}
+# The command 'git describe' (used for version) needs the history. Get it.
+# But the following command fails if the repository is complete.
+gblock "Fetch --unshallow" git fetch --unshallow || true
 
-#---
+case "$MINGW_INSTALLS" in
+  *32)
+    TARBALL_ARCH="i686"
+  ;;
+  *64)
+    TARBALL_ARCH="x86_64"
+  ;;
+  *)
+    printf "${ANSI_RED}Unknown MING_INSTALLS=${MINGW_INSTALLS}!$ANSI_NOCOLOR"
+    exit 1
+esac
 
-do_test () {
+gblock 'Install toolchain' pacman -S --noconfirm mingw-w64-${TARBALL_ARCH}-toolchain
+
+makepkg-mingw -sCLfc --noconfirm --noprogressbar
+
+gblock 'List artifacts' ls -la
+
+if [ -d testsuite ]; then
+  pacman --noconfirm -U mingw-*ghdl*.pkg.tar.zst
+
   gstart 'Environment'
     env | grep MSYSTEM
     env | grep MINGW
@@ -96,23 +104,4 @@ do_test () {
   export PATH=$PATH:"$(cd $(dirname $(which ghdl))/../lib; pwd)"
 
   GHDL=ghdl ./testsuite/testsuite.sh
-}
-
-#---
-
-cd $(dirname $0)
-
-if [ -z "$TARGET" ]; then
-  printf "${ANSI_RED}Undefined TARGET!$ANSI_NOCOLOR"
-  exit 1
 fi
-cd "$TARGET"
-
-case "$1" in
-  -t)
-    do_test
-  ;;
-  *)
-    do_build
-  ;;
-esac

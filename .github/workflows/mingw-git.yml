@@ -59,17 +59,8 @@ jobs:
     - name: '🧰 Checkout'
       uses: actions/checkout@v2
 
-    - name: Build package
-      run: ./msys2-mingw/run.sh -b
-
-    - name: '🛠️ Install package and 🐍 Python dependencies'
-      run: |
-        pacman --noconfirm -U msys2-mingw/${{ matrix.pkg }}/mingw-*ghdl*.pkg.tar.zst
-        pip3 install -r testsuite/requirements.txt
-
-    - name: '🚦 Test package'
-      name: Test package
-      run: ./msys2-mingw/run.sh -t
+    - name: Build and test package
+      run: ./msys2-mingw/run.sh
 
     - name: '📤 Upload artifact: package'
       uses: actions/upload-artifact@v2

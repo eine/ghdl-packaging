@@ -48,14 +48,8 @@ jobs:
 
     - uses: actions/checkout@v2
 
-    - name: Build package
-      run: ./msys2-mingw/run.sh -b
-
-    - name: Install package
-      run: pacman --noconfirm -U msys2-mingw/${{ matrix.pkg }}/mingw-*ghdl*.pkg.tar.zst
-
-    - name: Test package
-      run: ./msys2-mingw/run.sh -t
+    - name: Build and test package
+      run: ./msys2-mingw/run.sh
 
     - uses: actions/upload-artifact@v2
       with:
