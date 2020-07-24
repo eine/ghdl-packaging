@@ -56,7 +56,7 @@ jobs:
     - name: Test package
       run: ./msys2-mingw/run.sh -t
 
-    - uses: actions/upload-artifact@master
+    - uses: actions/upload-artifact@v2
       with:
         name: ${{ matrix.pkg }}
         path: |
