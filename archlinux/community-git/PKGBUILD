@@ -39,9 +39,6 @@ pkgver() {
 prepare() {
   cd "$srcdir"
 
-  cp -r ghdl/testsuite "${startdir}/"
-  rm -rf "${startdir}"/testsuite/gna/issue1326/
-
   cp -r $_pkgbase ghdl-mcode
   cp -r $_pkgbase ghdl-llvm
   cp -r $_pkgbase ghdl-gcc
@@ -123,6 +120,15 @@ build() {
       ghdllib
 }
 
+check() {
+  for backend in mcode llvm gcc; do
+    echo 'Testing ghdl-${backend}...'
+    cd "$srcdir"/ghdl-"${backend}"
+    make install.vpi.local
+    make test
+  done
+}
+
 package_ghdl-mcode-git() {
   pkgdesc="$pkgdesc (mcode backend)"
 
@@ -136,7 +142,7 @@ package_ghdl-llvm-git() {
   depends+=('llvm-libs')
   options=(!emptydirs)
 
-  cd $pkgname
+  cd ${pkgname%-git}
 
   make DESTDIR="$pkgdir" install
 
@@ -148,7 +154,7 @@ package_ghdl-gcc-git() {
   pkgdesc="$pkgdesc (GCC backend)"
   options=(!emptydirs)
 
-  cd "$srcdir"/gcc-build
+  cd ${pkgname%-git}
 
   make DESTDIR="$pkgdir" install
 
