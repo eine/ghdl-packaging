@@ -69,7 +69,7 @@ case "$1" in
       git commit -m wip
       git remote add origin https://src.fedoraproject.org/rpms/ghdl.git
       git fetch origin
-      git branch -u origin/master
+      git branch -u origin/main
     gend
 
     dnf builddep -y ghdl.spec
