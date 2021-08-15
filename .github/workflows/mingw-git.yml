@@ -24,11 +24,12 @@ jobs:
       max-parallel: 2
       matrix:
         include: [
-          {installs: "MINGW32", pkg: "mcode-git"},
-          #{installs: "MINGW32", pkg: "llvm-git"},  ! Not yet functional
-          #{installs: "MINGW64", pkg: "mcode-git"}, ! mcode it not yet supported on win64
-          {installs: "MINGW64", pkg: "llvm-git"},
+          #{icon: '🟪', pkg: 'llvm',  bits: '32', arch: i686 }, ! not yet functional
+          {icon: '🟦', pkg: 'llvm',  bits: '64', arch: x86_64 },
+          {icon: '🟪', pkg: 'mcode', bits: '32', arch: i686,   },
+          #{icon: '🟦', pkg: 'mcode', bits: '64', arch: x86_64, }, ! simulation with mcode is not yet supported on win64
         ]
+    name: '🚦${{ matrix.sys.icon }} ${{ matrix.sys.pkg }}${{ matrix.sys.bits }} · git'
     defaults:
       run:
         shell: msys2 {0}
@@ -37,27 +38,41 @@ jobs:
       TARGET: ${{ matrix.pkg }}
     steps:
 
-    - uses: msys2/setup-msys2@v2
+    - name: '${{ matrix.sys.icon }} Setup MSYS2'
+      uses: msys2/setup-msys2@v2
       with:
         msystem: ${{ matrix.installs }}
         update: true
-        install: base-devel git
+        install: >
+          base-devel
+          git
+          mingw-w64-${{ matrix.arch }}-toolchain
+          mingw-w64-${{ matrix.sys.arch }}-diffutils
+          mingw-w64-${{ matrix.sys.arch }}-gcc
+          mingw-w64-${{ matrix.sys.arch }}-python-pip
+          mingw-w64-${{ matrix.sys.arch }}-python-setuptools
 
-    - run: git config --global core.autocrlf input
+    - name: '⚙️ git config'
+      run: git config --global core.autocrlf input
       shell: bash
 
-    - uses: actions/checkout@v2
+    - name: '🧰 Checkout'
+      uses: actions/checkout@v2
 
     - name: Build package
       run: ./msys2-mingw/run.sh -b
 
-    - name: Install package
-      run: pacman --noconfirm -U msys2-mingw/${{ matrix.pkg }}/mingw-*ghdl*.pkg.tar.zst
+    - name: '🛠️ Install package and 🐍 Python dependencies'
+      run: |
+        pacman --noconfirm -U msys2-mingw/${{ matrix.pkg }}/mingw-*ghdl*.pkg.tar.zst
+        pip3 install -r testsuite/requirements.txt
 
-    - name: Test package
+    - name: '🚦 Test package'
+      name: Test package
       run: ./msys2-mingw/run.sh -t
 
-    - uses: actions/upload-artifact@v2
+    - name: '📤 Upload artifact: package'
+      uses: actions/upload-artifact@v2
       with:
         name: ${{ matrix.pkg }}
         path: |
